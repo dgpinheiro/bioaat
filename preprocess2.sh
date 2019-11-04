@@ -34,7 +34,13 @@ mkdir -p ${outdir}/processed/prinseq
 mkdir -p ${outdir}/processed/fastqc/pos
 
 for r1 in `ls ${indir}/*_R1.fastq`; do
+	
 	r2=`echo ${r1} | sed 's/_R1.fastq/_R2.fastq/'`
+	
+	if [ ! -e "${r2}" ]; then
+		echo "Read 2 (${r2}) paired with Read 1 ($r1) not found."
+		exit
+	fi
 
 	name=`basename ${r1} | sed 's/_R1.fastq//'`
 	echo "FastQC pre-evaluation using sample ${name}: ${r1} & ${r2} ..."
