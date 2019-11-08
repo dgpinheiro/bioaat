@@ -55,7 +55,7 @@ if [ ! -e "${refseq}" ]; then
 	exit
 fi
 
-./preprocess3.sh "${indir}" "${outdir}"
+#./preprocess3.sh "${indir}" "${outdir}"
 
 mkdir -p ${outdir}/star_index
 mkdir -p ${outdir}/star_out_pe
@@ -111,6 +111,8 @@ for r1 in `ls ${outdir}/processed/prinseq/*.atropos_final.prinseq_1.fastq`; do
 
 	echo "STAR alignment SE with sample ${name}: ${r1_singletons} & ${r2_singletons} ..."
 	
+	mkdir -p ${outdir}/star_out_se/${name}
+	
 	STAR 	--runThreadN  	    ${num_threads} \
          	--genomeDir	    ${outdir}/star_index \
          	--readFilesIn       ${r1_singletons},${r2_singletons} \
@@ -120,6 +122,8 @@ for r1 in `ls ${outdir}/processed/prinseq/*.atropos_final.prinseq_1.fastq`; do
 		2> ./${outdir}/star_index/STAR.alignment_se.log.err.txt
 
 	echo "Merging STAR alignment PE & SE ..."
+	
+	mkdir -p ${outdir}/star_out_final/${name}
 
         # Combinar resultados do alinhamento com reads paired-end e alinhamento com reads single-end (singletons)       
         samtools merge -@ ${num_threads} -f -n  ${outdir}/star_out_final/${name}/Aligned.out.bam \
