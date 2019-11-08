@@ -55,7 +55,7 @@ if [ ! -e "${refseq}" ]; then
 	exit
 fi
 
-./preprocess2.sh "${indir}" "${outdir}"
+./preprocess3.sh "${indir}" "${outdir}"
 
 mkdir -p ${outdir}/star_index
 mkdir -p ${outdir}/star_out_pe
