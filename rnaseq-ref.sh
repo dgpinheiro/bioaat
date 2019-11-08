@@ -1,6 +1,6 @@
 #!/bin/bash
 
-num_threads=2
+num_threads=4
 
 indir=$1
 
@@ -84,16 +84,17 @@ for r1 in `ls ${outdir}/processed/prinseq/*.atropos_final.prinseq_1.fastq`; do
 	
 	if [ ! -e "${outdir}/star_index/SAindex" ]; then
 		echo "Indexing genome (${refseq}) ..."
-		
+		# --genomeSAindexNbases 12 (sugestão do alinhador)
+		# --sjdbOverhang 149 (sugestão do manual)	
 		STAR 	--runThreadN        ${num_threads} \
      			--runMode           genomeGenerate \
      			--genomeFastaFiles  ${refseq} \
-     			--genomeDir         ./${outdir}/star_index \
-    	 		--sjdbGTFfile       ./genome.gtf \
+     			--genomeDir         ${outdir}/star_index \
+    	 		--sjdbGTFfile       ${refgtf} \
 			--genomeSAindexNbases 12 \
      			--sjdbOverhang      149 \
-		 > ./${outdir}/star_index/STAR.index.log.out.txt \
-		2> ./${outdir}/star_index/STAR.index.log.err.txt
+		 > ${outdir}/star_index/STAR.index.log.out.txt \
+		2> ${outdir}/star_index/STAR.index.log.err.txt
 
 	fi
 
@@ -105,9 +106,9 @@ for r1 in `ls ${outdir}/processed/prinseq/*.atropos_final.prinseq_1.fastq`; do
          	--genomeDir	    ${outdir}/star_index \
          	--readFilesIn       ${r1} ${r2} \
          	--sjdbGTFfile	    ${refgtf} \
-         	--outFileNamePrefix ./$outdir/star_out_pe/${name} \
-		 > ./${outdir}/star_index/STAR.alignment_pe.log.out.txt \
-		2> ./${outdir}/star_index/STAR.alignment_pe.log.err.txt
+         	--outFileNamePrefix ${outdir}/star_out_pe/${name} \
+		 > ${outdir}/star_out_pe/${name}/STAR.alignment_pe.log.out.txt \
+		2> ${outdir}/star_out_pe/${name}/STAR.alignment_pe.log.err.txt
 
 	echo "STAR alignment SE with sample ${name}: ${r1_singletons} & ${r2_singletons} ..."
 	
@@ -118,8 +119,8 @@ for r1 in `ls ${outdir}/processed/prinseq/*.atropos_final.prinseq_1.fastq`; do
          	--readFilesIn       ${r1_singletons},${r2_singletons} \
          	--sjdbGTFfile	    ${refgtf} \
          	--outFileNamePrefix ./$outdir/star_out_se/${name} \
-		 > ./${outdir}/star_index/STAR.alignment_se.log.out.txt \
-		2> ./${outdir}/star_index/STAR.alignment_se.log.err.txt
+		 > ./${outdir}/star_out_se/${name}/STAR.alignment_se.log.out.txt \
+		2> ./${outdir}/star_out_se/${name}/STAR.alignment_se.log.err.txt
 
 	echo "Merging STAR alignment PE & SE ..."
 	
