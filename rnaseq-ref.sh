@@ -100,11 +100,16 @@ for r1 in `ls ${outdir}/processed/prinseq/*.atropos_final.prinseq_1.fastq`; do
 
 	echo "STAR alignment PE with sample ${name}: ${r1} & ${r2} ..."
 	
+	# --outSAMstrandField intronMotif 
+	# --outFilterIntronMotifs RemoveNoncanonical 
+	# (parâmetros recomendados pelo Manual para manter a compatibilidade com Cufflinks)
 	mkdir -p ${outdir}/star_out_pe/${name}
 	
 	STAR 	--runThreadN  	    ${num_threads} \
          	--genomeDir	    ${outdir}/star_index \
          	--readFilesIn       ${r1} ${r2} \
+		--outSAMstrandField intronMotif \
+		--outFilterIntronMotifs RemoveNoncanonical \
          	--sjdbGTFfile	    ${refgtf} \
          	--outFileNamePrefix ${outdir}/star_out_pe/${name}/ \
 		--outSAMtype        BAM Unsorted \
@@ -120,6 +125,7 @@ for r1 in `ls ${outdir}/processed/prinseq/*.atropos_final.prinseq_1.fastq`; do
          	--readFilesIn       ${r1_singletons},${r2_singletons} \
          	--sjdbGTFfile	    ${refgtf} \
 		--outSAMtype        BAM Unsorted \
+		--outSAMstrandField intronMotif \
          	--outFileNamePrefix ./$outdir/star_out_se/${name}/ \
 		 > ./${outdir}/star_out_se/${name}/STAR.alignment_se.log.out.txt \
 		2> ./${outdir}/star_out_se/${name}/STAR.alignment_se.log.err.txt
@@ -131,13 +137,17 @@ for r1 in `ls ${outdir}/processed/prinseq/*.atropos_final.prinseq_1.fastq`; do
         # Combinar resultados do alinhamento com reads paired-end e alinhamento com reads single-end (singletons)       
         samtools merge -@ ${num_threads} -f -n  ${outdir}/star_out_final/${name}/Aligned.out.bam \
                                                 ${outdir}/star_out_pe/${name}/Aligned.out.bam \
-                                                ${outdir}/star_out_se/${name}/Aligned.out.bam
+                                                ${outdir}/star_out_se/${name}/Aligned.out.bam \
+	 > ${outdir}/star_out_final/samtools.merge.log.out.txt \
+	2> ${outdir}/star_out_final/samtools.merge.log.err.txt
 
 	echo "Sorting STAR alignment final ..."
         # Ordenando o resultado do alinhamento por coordenadas genômicas
         # - exigência para executar o cufflinks
         samtools sort -@ ${num_threads} -o      ${outdir}/star_out_final/${name}/Aligned.out.sorted.bam \
-                                                ${outdir}/star_out_final/${name}/Aligned.out.bam
+                                                ${outdir}/star_out_final/${name}/Aligned.out.bam \
+	 > ${outdir}/star_out_final/samtools.sort.log.out.txt \
+	2> ${outdir}/star_out_final/samtools.sort.log.err.txt
 
 	echo "Collecting alignment statistics ..."
 	
