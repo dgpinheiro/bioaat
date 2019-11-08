@@ -107,6 +107,7 @@ for r1 in `ls ${outdir}/processed/prinseq/*.atropos_final.prinseq_1.fastq`; do
          	--readFilesIn       ${r1} ${r2} \
          	--sjdbGTFfile	    ${refgtf} \
          	--outFileNamePrefix ${outdir}/star_out_pe/${name}/ \
+		--outSAMtype        BAM Unsorted \
 		 > ${outdir}/star_out_pe/${name}/STAR.alignment_pe.log.out.txt \
 		2> ${outdir}/star_out_pe/${name}/STAR.alignment_pe.log.err.txt
 
@@ -118,6 +119,7 @@ for r1 in `ls ${outdir}/processed/prinseq/*.atropos_final.prinseq_1.fastq`; do
          	--genomeDir	    ${outdir}/star_index \
          	--readFilesIn       ${r1_singletons},${r2_singletons} \
          	--sjdbGTFfile	    ${refgtf} \
+		--outSAMtype        BAM Unsorted \
          	--outFileNamePrefix ./$outdir/star_out_se/${name}/ \
 		 > ./${outdir}/star_out_se/${name}/STAR.alignment_se.log.out.txt \
 		2> ./${outdir}/star_out_se/${name}/STAR.alignment_se.log.err.txt
