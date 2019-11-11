@@ -61,6 +61,7 @@ mkdir -p ${outdir}/star_index
 mkdir -p ${outdir}/star_out_pe
 mkdir -p ${outdir}/star_out_se
 mkdir -p ${outdir}/star_out_final
+mkdir -p ${outdir}/cufflinks
 
 for r1 in `ls ${outdir}/processed/prinseq/*.atropos_final.prinseq_1.fastq`; do
 	r1_singletons=`echo ${r1} | sed 's/prinseq_1.fastq/prinseq_1_singletons.fastq/'`
@@ -111,6 +112,7 @@ for r1 in `ls ${outdir}/processed/prinseq/*.atropos_final.prinseq_1.fastq`; do
 		--outSAMstrandField intronMotif \
 		--outFilterIntronMotifs RemoveNoncanonical \
          	--sjdbGTFfile	    ${refgtf} \
+		--outFilterMultimapNmax 20 \
          	--outFileNamePrefix ${outdir}/star_out_pe/${name}/ \
 		--outSAMtype        BAM Unsorted \
 		 > ${outdir}/star_out_pe/${name}/STAR.alignment_pe.log.out.txt \
@@ -125,6 +127,7 @@ for r1 in `ls ${outdir}/processed/prinseq/*.atropos_final.prinseq_1.fastq`; do
          	--readFilesIn       ${r1_singletons},${r2_singletons} \
          	--sjdbGTFfile	    ${refgtf} \
 		--outSAMtype        BAM Unsorted \
+		--outFilterMultimapNmax 20 \
 		--outSAMstrandField intronMotif \
          	--outFileNamePrefix ./$outdir/star_out_se/${name}/ \
 		 > ./${outdir}/star_out_se/${name}/STAR.alignment_se.log.out.txt \
@@ -153,4 +156,18 @@ for r1 in `ls ${outdir}/processed/prinseq/*.atropos_final.prinseq_1.fastq`; do
 	
 	SAM_nameSorted_to_uniq_count_stats.pl ${outdir}/star_out_final/${name}/Aligned.out.bam > ${outdir}/star_out_final/${name}/Aligned.stats.txt
 	
+	echo "Running Cufflinks ..."
+
+#	cufflinks --output-dir ${outdir}/cufflinks \
+#		  --num-threads ${num_threads} \
+#		  --GTF-guide ${refgtf} \
+#		  --frag-bias-correct ${refseq} \
+#		  --multi-read-correct \
+#		  --library-type fr-unstranded \
+#		  --library-norm-method classic-fpkm \
+#		  --frag-len-mean 300 \
+#		  --frag-len-std-dev 50 \
+#		  --total-hits-norm \
+#		${outdir}/star_out_final/${name}/Aligned.out.sorted.bam
+
 done
