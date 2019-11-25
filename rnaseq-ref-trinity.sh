@@ -35,7 +35,8 @@ else
 fi
 
 
-num_threads=23
+num_threads="8"
+mem_gb="10G"
 
 ###
 # Arquivos e diretórios de entrada (input)
@@ -47,7 +48,7 @@ num_threads=23
 
 basedir_out="${output}"
 
-trinity_out="${basedir_out}/gg-assembled"
+trinity_out="${basedir_out}/trinity_GG_assembled"
 
 # Criando diretórios para as saídas dos programas que serão utilizados a seguir
 
@@ -55,6 +56,8 @@ trinity_out="${basedir_out}/gg-assembled"
 mkdir -p ${trinity_out}
 
 bamfiles=()
+
+echo -e "Collecting alignments ..."
 
 bamfiles=( $( find ${input} -name 'Aligned.out.sorted.bam' ) )
 
@@ -67,7 +70,7 @@ if [ ! -d ${trinity_out}/Trinity.timing ]; then
 	Trinity --KMER_SIZE 27 \
 		--output ${trinity_out} \
 		--seqType fq \
-		--max_memory 160G \
+		--max_memory ${mem_gb} \
 		--CPU ${num_threads} \
 		--min_per_id_same_path 95 \
 		--max_diffs_same_path  5 \
