@@ -32,7 +32,8 @@ else
         fi
 fi
 
-num_threads=8
+num_threads="8"
+mem_gb="10G"
 
 ###
 # Arquivos e diretórios de saída (output) 
@@ -42,7 +43,7 @@ basedir_out="${output}/"
 
 renamed_out="${basedir_out}/renamed"
 
-trinity_out="${basedir_out}/assembled"
+trinity_out="${basedir_out}/trinity_assembled"
 
 mkdir -p ${renamed_out}
 
@@ -64,22 +65,22 @@ for fastq in `ls ${input}/*.fastq`; do
 		renamed_fastq="${renamed_out}/${fastqbn}"
 		if [ ! -e ${renamed_fastq} ]; then
 			echo -e "\tRenaming ${fastqbn} ..."
-			if [[ ${fastqbn} =~ _R1[\._] ]]; then
+			if [[ ${fastqbn} =~ _1[\._] ]]; then
 				awk '{ if (NR%4==1) { print $1"/1" } else { print } }' ${fastq} > ${renamed_fastq}
-			elif [[ ${fastqbn} =~ _R2[\._]  ]]; then
+			elif [[ ${fastqbn} =~ _2[\._]  ]]; then
 				awk '{ if (NR%4==1) { print $1"/2" } else { print } }' ${fastq} > ${renamed_fastq}
 			else 
-				echo "Ignoring ${fastqbn} ..."
+				echo "Warning: ${fastqbn} discarded!"
 			fi
 		fi
 
-		if [[ ${fastqbn} =~ _R1[\._] ]]; then
+		if [[ ${fastqbn} =~ _1[\._] ]]; then
 			if [[ ${fastqbn} =~ singletons ]]; then
 				left_singleton=($(printf "%s\n" ${left_singleton[@]} ${renamed_fastq} | sort -u ))
 			else
 				left=($(printf "%s\n" ${left[@]} ${renamed_fastq}  | sort -u ))
 			fi
-		elif [[ ${fastqbn} =~ _R2[\._] ]]; then
+		elif [[ ${fastqbn} =~ _2[\._] ]]; then
 			if [[ ${fastqbn} =~ singleton ]]; then
 				right_singleton=($(printf "%s\n" ${right_singleton[@]} ${renamed_fastq}  | sort -u ))
 			else
@@ -99,7 +100,7 @@ if [ ! -d ${trinity_out}/Trinity.timing ]; then
 	Trinity --KMER_SIZE 27 \
 		--output ${trinity_out} \
 		--seqType fq \
-		--max_memory 160G \
+		--max_memory ${mem_gb} \
 		--CPU ${num_threads} \
 		--min_per_id_same_path 95 \
 		--max_diffs_same_path  5 \
