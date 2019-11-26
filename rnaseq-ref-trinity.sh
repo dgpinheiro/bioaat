@@ -36,7 +36,7 @@ fi
 
 
 num_threads="8"
-mem_gb="10G"
+mem_gb="16G"
 
 ###
 # Arquivos e diretórios de entrada (input)
@@ -48,6 +48,10 @@ mem_gb="10G"
 
 basedir_out="${output}"
 
+aligned_out="${basedir_out}/trinity_GG_input"
+
+mkdir -p ${aligned_out}
+
 trinity_out="${basedir_out}/trinity_GG_assembled"
 
 # Criando diretórios para as saídas dos programas que serão utilizados a seguir
@@ -55,18 +59,24 @@ trinity_out="${basedir_out}/trinity_GG_assembled"
 
 mkdir -p ${trinity_out}
 
-bamfiles=()
-
-echo -e "Collecting alignments ..."
-
-bamfiles=( $( find ${input} -name 'Aligned.out.sorted.bam' ) )
-
-samtools merge -f ${basedir_out}/All.sorted.bam ${bamfiles[*]}
+if [ ! -e "${aligned_out}/All.sorted.bam" ]; then
+	echo -e "Collecting alignments ..."
+	
+	bamfiles=()
+	
+	bamfiles=( $( find ${input} -name 'Aligned.out.sorted.bam' ) )
+	
+	samtools merge -f ${aligned_out}/All.sorted.bam ${bamfiles[*]}
+	
+	samtools sort --threads ${num_threads} ${aligned_out}/All.sorted.bam > ${aligned_out}/All.csorted.bam
+	
+	rm -f ${aligned_out}/All.sorted.bam
+fi
 
 if [ ! -d ${trinity_out}/Trinity.timing ]; then
 	
 	echo -e "Assembling step (Trinity) ..."
-
+	
 	Trinity --KMER_SIZE 27 \
 		--output ${trinity_out} \
 		--seqType fq \
@@ -78,9 +88,11 @@ if [ ! -d ${trinity_out}/Trinity.timing ]; then
 		--group_pairs_distance 500 \
 		--min_glue 5 \
 		--min_contig_length 600 \
-               	--min_kmer_cov 3 \
-		--genome_guided_bam ${basedir_out}/All.sorted.bam \
+		--min_kmer_cov 3 \
+		--genome_guided_bam ${aligned_out}/All.csorted.bam \
 		--genome_guided_max_intron 10000 \
 		 > ${trinity_out}/Trinity.log.out.txt \
 		2> ${trinity_out}/Trinity.log.err.txt
+		#--genome_guided_bam ${aligned_out}/All.sorted.bam \
+		#--genome_guided_bam ./XM_024918093.1.bam \
 fi

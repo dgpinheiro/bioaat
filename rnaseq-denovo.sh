@@ -73,7 +73,7 @@ for fastq in `ls ${input}/*.fastq`; do
 				echo "Warning: ${fastqbn} discarded!"
 			fi
 		fi
-
+		
 		if [[ ${fastqbn} =~ _1[\._] ]]; then
 			if [[ ${fastqbn} =~ singletons ]]; then
 				left_singleton=($(printf "%s\n" ${left_singleton[@]} ${renamed_fastq} | sort -u ))
@@ -108,7 +108,7 @@ if [ ! -d ${trinity_out}/Trinity.timing ]; then
 		--group_pairs_distance 500 \
 		--min_glue 5 \
 		--min_contig_length 600 \
-               	--min_kmer_cov 3 \
+		--min_kmer_cov 3 \
 		--left $(IFS=, ; echo "${left[*]},${left_singleton[*]}") \
 		--right $(IFS=, ; echo "${right[*]},${right_singleton[*]}") \
 		 > ${trinity_out}/Trinity.log.out.txt \
