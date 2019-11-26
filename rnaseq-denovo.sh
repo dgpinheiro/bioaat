@@ -66,9 +66,9 @@ for fastq in `ls ${input}/*.fastq`; do
 		if [ ! -e ${renamed_fastq} ]; then
 			echo -e "\tRenaming ${fastqbn} ..."
 			if [[ ${fastqbn} =~ _1[\._] ]]; then
-				awk '{ if (NR%4==1) { print $1"/1" } else { print } }' ${fastq} > ${renamed_fastq}
+				awk '{ if (NR%4==1) { if ($1!~/\/1$/) { print $1"/1" } else { print $0 } } else if (NR%4==3) { print "+" } else { print $0 } }' ${fastq} > ${renamed_fastq}
 			elif [[ ${fastqbn} =~ _2[\._]  ]]; then
-				awk '{ if (NR%4==1) { print $1"/2" } else { print } }' ${fastq} > ${renamed_fastq}
+				awk '{ if (NR%4==1) { if ($1!~/\/2$/) { print $1"/2" } else { print $0 } } else if (NR%4==3) { print "+" } else { print $0 } }' ${fastq} > ${renamed_fastq}
 			else 
 				echo "Warning: ${fastqbn} discarded!"
 			fi
