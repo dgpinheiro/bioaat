@@ -77,6 +77,9 @@ if [ ! -d ${trinity_out}/Trinity.timing ]; then
 	
 	echo -e "Assembling step (Trinity) ..."
 	
+	rm -fr ${trinity_out}
+	mkdir -p ${trinity_out}
+	
 	Trinity --KMER_SIZE 27 \
 		--output ${trinity_out} \
 		--seqType fq \
