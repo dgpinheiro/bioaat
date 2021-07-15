@@ -6,12 +6,12 @@ input=$1
 # validação do parâmetro "input"
 if [ ! ${input} ]
 then   
-        echo "Missing input directory"
+        echo "[ERROR] Missing input directory." 1>&2
         exit
 else   
         if [ ! -d ${input} ]
         then   
-                echo "Wrong input directory ${input}"
+                echo "[ERROR] Wrong input directory (${input})." 1>&2
                 exit
         fi
 fi
@@ -22,18 +22,33 @@ output=$2
 # validação do parâmetro "output"
 if [ ! ${output} ]
 then   
-        echo "Missing output directory"
+        echo "[ERROR] Missing output directory." 1>&2
         exit
 else   
         if [ ! -d ${output} ]
         then   
-                echo "Wrong output directory ${output}"
+                echo "[ERROR] Wrong output directory (${output})." 1>&2
                 exit
         fi
 fi
 
-num_threads="8"
-mem_gb="10G"
+# Número de CORES para o processamento
+# ATENÇÃO: Não exceder o limite da máquina
+THREADS=$3
+
+if [ ! ${THREADS} ]; then
+	echo "[ERROR] Missing number of threads." 1>&2
+	exit
+fi
+
+# Quantidade de memória para o processamento com Jellyfish
+# ATENÇÃO: Não exceder o limite da máquina
+MEM=$4
+
+if [ ! ${MEM} ]; then
+	echo "[ERROR] Missing memory." 1>&2
+	exit
+fi
 
 ###
 # Arquivos e diretórios de saída (output) 
@@ -46,7 +61,7 @@ renamed_out="${basedir_out}/renamed"
 trinity_out="${basedir_out}/trinity_assembled"
 
 mkdir -p ${renamed_out}
-
+mkdir -p ${trinity_out}
 
 left=()
 left_singleton=()
@@ -54,9 +69,7 @@ left_singleton=()
 right=()
 right_singleton=()
 
-echo "Renaming step ..."
-
-mkdir -p ${trinity_out}
+echo "Performing renaming step ..."
 
 for fastq in `ls ${input}/*.fastq`; do
 	# obtendo nome do arquivo 
@@ -66,9 +79,9 @@ for fastq in `ls ${input}/*.fastq`; do
 		if [ ! -e ${renamed_fastq} ]; then
 			echo -e "\tRenaming ${fastqbn} ..."
 			if [[ ${fastqbn} =~ _1[\._] ]]; then
-				awk '{ if (NR%4==1) { if ($1!~/\/1$/) { print $1"/1" } else { print $0 } } else if (NR%4==3) { print "+" } else { print $0 } }' ${fastq} > ${renamed_fastq}
+				awk '{ if (NR%4==1) { if ($1!~/\/1$/) { print $1"/1" } else { print $1 } } else if (NR%4==3) { print "+" } else { print $1 } }' ${fastq} > ${renamed_fastq}
 			elif [[ ${fastqbn} =~ _2[\._]  ]]; then
-				awk '{ if (NR%4==1) { if ($1!~/\/2$/) { print $1"/2" } else { print $0 } } else if (NR%4==3) { print "+" } else { print $0 } }' ${fastq} > ${renamed_fastq}
+				awk '{ if (NR%4==1) { if ($1!~/\/2$/) { print $1"/2" } else { print $1 } } else if (NR%4==3) { print "+" } else { print $1 } }' ${fastq} > ${renamed_fastq}
 			else 
 				echo "Warning: ${fastqbn} discarded!"
 			fi
@@ -76,13 +89,17 @@ for fastq in `ls ${input}/*.fastq`; do
 		
 		if [[ ${fastqbn} =~ _1[\._] ]]; then
 			if [[ ${fastqbn} =~ singletons ]]; then
-				left_singleton=($(printf "%s\n" ${left_singleton[@]} ${renamed_fastq} | sort -u ))
+				if [ -s ${renamed_fastq} ]; then
+					left_singleton=($(printf "%s\n" ${left_singleton[@]} ${renamed_fastq} | sort -u ))
+				fi
 			else
 				left=($(printf "%s\n" ${left[@]} ${renamed_fastq}  | sort -u ))
 			fi
 		elif [[ ${fastqbn} =~ _2[\._] ]]; then
 			if [[ ${fastqbn} =~ singleton ]]; then
-				right_singleton=($(printf "%s\n" ${right_singleton[@]} ${renamed_fastq}  | sort -u ))
+				if [ -s ${renamed_fastq} ]; then
+					right_singleton=($(printf "%s\n" ${right_singleton[@]} ${renamed_fastq}  | sort -u ))
+				fi
 			else
 				right=($(printf "%s\n" ${right[@]} ${renamed_fastq}  | sort -u ))
 			fi
@@ -93,25 +110,40 @@ for fastq in `ls ${input}/*.fastq`; do
 done
 
 
-if [ ! -d ${trinity_out}/Trinity.timing ]; then
+#for l in ${left[@]}; do
+#	echo -e "L: ${l}";
+#done
+#
+#for r in ${right[@]}; do
+#	echo -e "R: ${r}";
+#done
+#
+#for ls in ${left_singleton[@]}; do
+#	echo -e "LS: ${ls}";
+#done
+#
+#for rs in ${right_singleton[@]}; do
+#	echo -e "RS: ${rs}";
+#done
+
+if [ ! -d ${trinity_out}/Trinity.fasta ]; then
 	
 	echo -e "Assembling step (Trinity) ..."
 	
 	rm -fr ${trinity_out}
 	mkdir -p ${trinity_out}
 
-	Trinity --KMER_SIZE 27 \
-		--output ${trinity_out} \
+	Trinity --output ${trinity_out} \
 		--seqType fq \
-		--max_memory ${mem_gb} \
-		--CPU ${num_threads} \
-		--min_per_id_same_path 95 \
-		--max_diffs_same_path  5 \
-		--path_reinforcement_distance 5 \
-		--group_pairs_distance 500 \
-		--min_glue 5 \
-		--min_contig_length 600 \
+		--max_memory ${MEM} \
+		--CPU ${THREADS} \
+		--min_per_id_same_path 98 \
+		--max_diffs_same_path  2 \
+		--path_reinforcement_distance 3 \
+		--group_pairs_distance 600 \
 		--min_kmer_cov 3 \
+		--min_glue 2 \
+		--min_contig_length 300 \
 		--left $(IFS=, ; echo "${left[*]},${left_singleton[*]}") \
 		--right $(IFS=, ; echo "${right[*]},${right_singleton[*]}") \
 		 > ${trinity_out}/Trinity.log.out.txt \

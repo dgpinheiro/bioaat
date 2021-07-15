@@ -63,7 +63,7 @@ right=()
 echo "Collecting reads step ..."
 
 
-left=($(find ${input} -type f -name '*_1.fastq'))
+left=($(find ${input} -type f -name '*.prinseq_1.fastq'))
 
 rm -f ${abundance_out}/samples.txt
 rm -f ${abundance_out}/quant_files.txt

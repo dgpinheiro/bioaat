@@ -152,7 +152,7 @@ else
 			--genomeFastaFiles genome.fa \
 			--genomeDir ./ \
 			--sjdbGTFfile ${absrefgtf} \
-			--genomeSAindexNbases 12 \
+			--genomeSAindexNbases 10 \
 			--sjdbOverhang 149 \
 			 > STAR.genomeGenerate.log.out.txt \
 			2> STAR.genomeGenerate.log.err.txt
@@ -205,9 +205,10 @@ for r1 in `find ${outdir}/ -name '*.prinseq.cleaned_1.fastq'`; do
 
 			echo -e "\tTopHat2 alignment (${name}) paired-end reads X genome ..." 
 
-			tophat2 --min-anchor 8 \
-				--min-intron-length 10 \
-				--max-intron-length 1050000 \
+			tophat2 --min-anchor 75 \
+				--min-intron-length 5000000 \
+				--max-intron-length 5000000 \
+				--no-novel-juncs \
 				--max-multihits 20 \
 				--transcriptome-max-hits 10 \
 				--prefilter-multihits \
@@ -240,9 +241,10 @@ for r1 in `find ${outdir}/ -name '*.prinseq.cleaned_1.fastq'`; do
 
 				echo -e "\tTopHat2 alignment (${name}) singleton reads X genome ..." 
 
-				tophat2 --min-anchor 8 \
-					--min-intron-length 10 \
-					--max-intron-length 1050000 \
+				tophat2 --min-anchor 75 \
+					--min-intron-length 5000000 \
+					--max-intron-length 5000000 \
+					--no-novel-juncs \
 					--max-multihits 20 \
 					--transcriptome-max-hits 10 \
 					--prefilter-multihits \
@@ -350,12 +352,12 @@ for r1 in `find ${outdir}/ -name '*.prinseq.cleaned_1.fastq'`; do
 				--outSAMtype BAM Unsorted \
 				--outFilterType BySJout \
 				--outSJfilterReads Unique \
-				--alignSJoverhangMin 8 \
-				--alignSJDBoverhangMin 1 \
+				--alignSJoverhangMin 75 \
+				--alignSJDBoverhangMin 75 \
 				--outFilterMismatchNmax 999 \
 				--outFilterMismatchNoverReadLmax 0.04 \
-				--alignIntronMin 20 \
-				--alignIntronMax 1050000 \
+				--alignIntronMin 5000000 \
+				--alignIntronMax 1 \
 				--alignMatesGapMax 1000000 \
 			 > ${outdir}/star_out_pe/${name}.log.out.txt \
 			2> ${outdir}/star_out_pe/${name}.log.err.txt
@@ -384,12 +386,12 @@ for r1 in `find ${outdir}/ -name '*.prinseq.cleaned_1.fastq'`; do
 					--outSAMtype BAM Unsorted \
 					--outFilterType BySJout \
 					--outSJfilterReads Unique \
-					--alignSJoverhangMin 8 \
-					--alignSJDBoverhangMin 1 \
+					--alignSJoverhangMin 75 
+					--alignSJDBoverhangMin 75 \
 					--outFilterMismatchNmax 999 \
 					--outFilterMismatchNoverReadLmax 0.04 \
-					--alignIntronMin 20 \
-					--alignIntronMax 1050000 \
+					--alignIntronMin 5000000 \
+					--alignIntronMax 1 \
 					--alignMatesGapMax 1000000 \
 				 > ${outdir}/star_out_se/${name}.log.out.txt \
 				2> ${outdir}/star_out_se/${name}.log.err.txt
@@ -417,16 +419,9 @@ for r1 in `find ${outdir}/ -name '*.prinseq.cleaned_1.fastq'`; do
 							${outdir}/star_out_se/${name}/Aligned.out.bam \
 						 > ${outdir}/star_out_final/${name}.log.out.txt \
 						2> ${outdir}/star_out_final/${name}.log.err.txt
-						
-						samtools sort   -n --threads ${THREADS} \
-								${outdir}/star_out_final/${name}/Aligned.out.bam \
-								-o ${outdir}/star_out_final/${name}/Aligned.named.out.bam
-						
-						rm -f ${outdir}/star_out_final/${name}/Aligned.out.bam
-						
-						mv 	${outdir}/star_out_final/${name}/Aligned.named.out.bam \
-							${outdir}/star_out_final/${name}/Aligned.out.bam
-						
+		
+		
+
 				else
 					pe_result_abs_path=$(readlink -f ${outdir}/star_out_pe/${name}/Aligned.out.bam)
 					cd ${outdir}/star_out_final/${name}/
@@ -498,26 +493,26 @@ for r1 in `find ${outdir}/ -name '*.prinseq.cleaned_1.fastq'`; do
 
 				cufflinks	--output-dir ${outdir}/${aligner}_cufflinks/${name} \
 						--num-threads ${THREADS} \
-						--GTF-guide ${refgtf} \
+						--GTF ${refgtf} \
 						--frag-bias-correct ${refseq} \
 						--multi-read-correct \
 						--library-type fr-unstranded \
 						--frag-len-mean 300 \
 						--frag-len-std-dev 30 \
 						--total-hits-norm \
-						--min-isoform-fraction 0.25 \
-						--pre-mrna-fraction 0.15 \
+						--min-isoform-fraction 0.5 \
+						--pre-mrna-fraction 0.5 \
 						--min-frags-per-transfrag 10 \
-						--junc-alpha 0.0009 \
-						--small-anchor-fraction 0.08 \
+						--junc-alpha 0.0000009 \
+						--small-anchor-fraction 0.5 \
 						--overhang-tolerance 0 \
-						--min-intron-length 10 \
-						--max-intron-length 1050000 \
+						--min-intron-length 5000000 \
+						--max-intron-length 1 \
 						--trim-3-avgcov-thresh 0.05 \
 						--trim-3-dropoff-frac 0.01 \
 						--max-multiread-fraction 0.75 \
-						--overlap-radius 25 \
-						--3-overhang-tolerance 600 \
+						--overlap-radius 1 \
+						--3-overhang-tolerance 0 \
 						--intron-overhang-tolerance 0 \
 						${outdir}/align_out_final/${name}/Aligned.sorted.bam \
 					 > ${outdir}/${aligner}_cufflinks/${name}/cufflinks.out.txt \
@@ -532,14 +527,14 @@ for r1 in `find ${outdir}/ -name '*.prinseq.cleaned_1.fastq'`; do
 
 				stringtie	${outdir}/align_out_final/${name}/Aligned.sorted.bam \
 						-G ${refgtf} \
-						-f 0.25 \
+						-f 0.5 \
 						-m 200 \
 						-o ${outdir}/${aligner}_stringtie/${name}/transcripts.gtf \
-						-a 8 \
-						-j 2 \
+						-a 75 \
+						-j 10000 \
 						-c 4 \
 						-v \
-						-g 25 \
+						-g 0 \
 						-C ${outdir}/${aligner}_stringtie/${name}/coverages.txt \
 						-M 1 \
 						-p ${THREADS} \
@@ -574,7 +569,7 @@ if [ "${assembler}" == "cufflinks" ]; then
 		cuffmerge 	-o ${outdir}/${aligner}_cuffmerge \
 				--ref-gtf ${refgtf} \
 				--ref-sequence ${refseq} \
-				--min-isoform-fraction 0.25 \
+				--min-isoform-fraction 0.5 \
 				--num-threads ${THREADS} \
 				${outdir}/assembly_GTF_list.txt \
 			 > ${outdir}/${aligner}_cuffmerge/cuffmerge.out.txt \
@@ -595,8 +590,8 @@ else
 				-c 1 \
 				-F 4 \
 				-T 4 \
-				-f 0.25 \
-				-g 25 \
+				-f 0.5 \
+				-g 0 \
 				${outdir}/assembly_GTF_list.txt \
 			> ${outdir}/${aligner}_stringmerge/stringmerge.out.txt \
 			2> ${outdir}/${aligner}_stringmerge/stringmerge.err.txt
