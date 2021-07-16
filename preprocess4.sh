@@ -157,8 +157,8 @@ for r1 in `ls ${indir}/*_R1.fastq`; do
 			     -pe2 ${r2} \
 			     --untrimmed-output ${outdir}/processed/atropos/${name}_R1.atropos_untrimmed.fastq \
 			     --untrimmed-paired-output ${outdir}/processed/atropos/${name}_R2.atropos_untrimmed.fastq \
-			       > ./output/processed/atropos/${name}.atropos.log.out.txt \
-			      2> ./output/processed/atropos/${name}.atropos.log.err.txt
+			       > ${outdir}/processed/atropos/${name}.atropos.log.out.txt \
+			      2> ${outdir}/processed/atropos/${name}.atropos.log.err.txt
 		
 		echo -e "\tRunning atropos (adapter) for adapter trimming using sample ${name}: ${outdir}/processed/atropos/${name}_R1.atropos_untrimmed.fastq & ${outdir}/processed/atropos/${name}_R2.atropos_untrimmed.fastq ...\n"
 		atropos trim    --aligner adapter \
